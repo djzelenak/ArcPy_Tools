@@ -1,6 +1,6 @@
 """
 Use a shapefile with multiple features to clip a raster or multiple rasters.  The script will process all rasters in
-the specified input directory.  The input directory must also contain the clipping shapefile.
+the specified input directory.
 
 ****Requires the ArcGIS python interpreter****
 
