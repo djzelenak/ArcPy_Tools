@@ -14,8 +14,6 @@ import datetime
 # A list of blocks following the file naming pattern
 BLOCKS = ["block_{}".format(j) for j in range(1, 36)]
 
-# A separate list because Chris's png's spell "block" different >:o
-# I know this is an easy fix....
 BLCKS = ["blk{}_".format(i) for i in range(1, 36)]
 
 
@@ -110,6 +108,8 @@ def main_work(img_dir, feature="trends_used_blocks", field="cnfmat", option=""):
     # Get a list of the PNG files from the img_dir
     image_list = get_files(indir=img_dir, option=option)
 
+    assert(len(image_list) > 0)
+
     # Check if the field exists in the attribute table, if not then add it as a text field with appropriate length
     check_field(feature, field, len(image_list[0]))
 
@@ -118,14 +118,20 @@ def main_work(img_dir, feature="trends_used_blocks", field="cnfmat", option=""):
 
     # Parse through the blocks
     # TODO Write function to find specific block number, and block naming pattern
-    for block, blck in zip(BLOCKS, BLCKS):
+    for idx, (block, blck) in enumerate(zip(BLOCKS, BLCKS)):
 
         # Select the current feature based on the current block
-        arcpy.SelectLayerByAttribute_management(layer, "NEW_SELECTION",
-                                                "BlockID = 'trends_{}'".format(block))
+        arcpy.SelectLayerByAttribute_management(layer,
+
+                                                "NEW_SELECTION",
+
+                                                # Make sure this is the correct BlockID pattern
+                                                "BlockID = 'Trends Block {}'".format(idx + 1))
 
         # Get the image associated with the current block
         item = get_block(blck, image_list)
+
+        assert(item is not None)
 
         # Access the attribute table field, the row is the selected feature from 'layer'
         with arcpy.da.UpdateCursor(layer, field) as cursor:
@@ -133,6 +139,8 @@ def main_work(img_dir, feature="trends_used_blocks", field="cnfmat", option=""):
             for row in cursor:
                 # Add 'item', in this case a string containing the path and filename of a PNG, to the specified field
                 # for the selected row of the attribute table
+                # each 'row' is a list object
+
                 row[0] = item
 
                 cursor.updateRow(row)
