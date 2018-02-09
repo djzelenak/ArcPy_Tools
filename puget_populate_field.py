@@ -30,6 +30,7 @@ def get_time():
 def get_files(indir, ext='.png', option=''):
     """
     Return a list of the files in the specified directory
+    :param option:
     :param ext:
     :param indir:
     :return:
@@ -100,6 +101,7 @@ def get_block(block, file_list):
 def main_work(img_dir, feature="trends_used_blocks", field="cnfmat", option=""):
     """
 
+    :param option:
     :param img_dir:
     :param feature:
     :param field:
