@@ -12,7 +12,11 @@ import argparse
 import datetime
 
 # A list of blocks following the file naming pattern
-BLOCKS = ["blk_{}_".format(i) for i in range(1, 36)]
+BLOCKS = ["block_{}".format(j) for j in range(1, 36)]
+
+# A separate list because Chris's png's spell "block" different >:o
+# I know this is an easy fix....
+BLCKS = ["blk{}_".format(i) for i in range(1, 36)]
 
 
 def get_time():
@@ -23,14 +27,14 @@ def get_time():
     return datetime.datetime.now()
 
 
-def get_files(indir, ext=".png"):
+def get_files(indir, ext='.png', option=''):
     """
     Return a list of the files in the specified directory
     :param ext:
     :param indir:
     :return:
     """
-    return glob.glob(indir + os.sep + "*{}".format(ext))
+    return glob.glob(indir + os.sep + "*_{}{}".format(option, ext))
 
 
 def check_field(feature, field, length=100):
@@ -84,7 +88,7 @@ def get_block(block, file_list):
     :param file_list:
     :return:
     """
-    block = block + "_2000_count"
+    # block = block + "_2000_count"
 
     for f in file_list:
 
@@ -93,7 +97,7 @@ def get_block(block, file_list):
             return f
 
 
-def main_work(img_dir, feature="trends_used_blocks", field="cnfmat"):
+def main_work(img_dir, feature="trends_used_blocks", field="cnfmat", option=""):
     """
 
     :param img_dir:
@@ -101,24 +105,32 @@ def main_work(img_dir, feature="trends_used_blocks", field="cnfmat"):
     :param field:
     :return:
     """
-    image_list = get_files(img_dir)
+    # Get a list of the PNG files from the img_dir
+    image_list = get_files(indir=img_dir, option=option)
 
+    # Check if the field exists in the attribute table, if not then add it as a text field with appropriate length
     check_field(feature, field, len(image_list[0]))
 
+    # Create a layer, necessary for selecting individual features outside of ArcMap
     layer = make_layer(img_dir, feature)
 
-    for block in BLOCKS:
+    # Parse through the blocks
+    # TODO Write function to find specific block number, and block naming pattern
+    for block, blck in zip(BLOCKS, BLCKS):
 
         # Select the current feature based on the current block
         arcpy.SelectLayerByAttribute_management(layer, "NEW_SELECTION",
-                                                "BlockID = 'trends_{}'".format(block[:-1]))
+                                                "BlockID = 'trends_{}'".format(block))
 
         # Get the image associated with the current block
-        item = get_block(block, image_list)
+        item = get_block(blck, image_list)
 
+        # Access the attribute table field, the row is the selected feature from 'layer'
         with arcpy.da.UpdateCursor(layer, field) as cursor:
 
             for row in cursor:
+                # Add 'item', in this case a string containing the path and filename of a PNG, to the specified field
+                # for the selected row of the attribute table
                 row[0] = item
 
                 cursor.updateRow(row)
@@ -137,6 +149,9 @@ def main():
 
     parser.add_argument("-f", dest="field", type=str, required=False,
                         help="The name of the attribute table field to populate")
+
+    parser.add_argument("-opt", dest="option", type=str, required=False,
+                        help="Not Required: A distinguishing string to help find the correct PNGs")
 
     args = parser.parse_args()
 
