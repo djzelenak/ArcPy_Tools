@@ -7,7 +7,7 @@ import glob
 import argparse
 
 # This is the projected coordinate system used by Collection 01 ARD
-# Generated from a reference file with arcpy.Description(<raster>).spatialReference().exporttostring()
+# Generated from a reference file with arcpy.Description(<raster>).spatialReference.exporttostring()
 wkt = "PROJCS['WGS_1984_Albers',GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378140.0,298.257]]," \
       "PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Albers'],PARAMETER['false_easting'," \
       "0.0],PARAMETER['false_northing',0.0],PARAMETER['central_meridian',-96.0],PARAMETER['standard_parallel_1'," \
