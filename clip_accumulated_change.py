@@ -100,7 +100,7 @@ def main():
                         help="The full path to the output directory")
 
     parser.add_argument("-shp", dest="shp", required=True, type=str,
-                        help="The full path to the clippin shapefile")
+                        help="The full path to the clipping shapefile")
 
     parser.add_argument("-f", "--field", dest="field", required=True, type=str,
                         help="The name of the attribute field used to identify the splitting features")
