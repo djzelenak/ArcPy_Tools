@@ -1,8 +1,11 @@
-import subprocess, os
+
+import os
+import subprocess
 
 if __name__ == "__main__":
 
-    names = ["CoverSec", "ChangeMap", "ChangeMagMap", "LastChange", "SegLength", "QAMap", "CoverConfPrim", "CoverConfSec"]
+    names = ["CoverSec", "ChangeMap", "ChangeMagMap", "LastChange", "SegLength", "QAMap", "CoverConfPrim",
+             "CoverConfSec"]
     acc_names = ["Change", "Cover"]
 
     interpreter = r"C:\Python27\ArcGIS10.5\python.exe"

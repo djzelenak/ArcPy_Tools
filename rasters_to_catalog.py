@@ -1,7 +1,7 @@
 """
 A command line version of the script that is used by ArcTool 'Animation Raster Catalog'
 
-****Requires the ArcGIS python interpreter****
+****Requires the ArcGIS python 2.7 interpreter****
 """
 
 import arcpy
@@ -9,6 +9,7 @@ import os
 import datetime as dt
 import re
 import argparse
+import pprint
 
 
 def get_time():
@@ -19,10 +20,24 @@ def get_time():
     return dt.datetime.now()
 
 
-def main_work(indir, gdb_name, rc_name, outdir = None,
+def describe_raster(in_raster):
+    """
+    Return the spatial reference system of the raster
+    :param in_raster:
+    :return:
+    """
+    desc = arcpy.Describe(in_raster)
+
+    return desc.spatialReference
+
+
+def main_work(indir, gdb_name, rc_name, outdir=None,
               skip_exist="SKIP_EXISTING", skip_first="NONE", year_field="Year"):
     """
     Generate a raster catalog in a file geodatabase from all rasters in the given input directory
+    :param year_field:
+    :param skip_first:
+    :param skip_exist:
     :param indir:
     :param outdir:
     :param gdb_name:
@@ -37,13 +52,10 @@ def main_work(indir, gdb_name, rc_name, outdir = None,
     # Set the output directory that will contain the geodatabase
     # formerly arcpy.GetParameterAsText(1)
     if outdir is None:
-
         outdir = indir
 
     else:
-
         if not os.path.exists(outdir):
-
             os.makedirs(outdir)
 
     # Name of FileGDB
@@ -53,46 +65,45 @@ def main_work(indir, gdb_name, rc_name, outdir = None,
 
         gdb_name = gdb_name + ".gdb"
 
-    file_gdb = outdir + os.sep + gdb_name
+    file_gdb = os.path.join(outdir, gdb_name)
 
-    # Name of Raster Catalaog
+    # Name of Raster Catalog
     # formerly arcpy.GetParameterAsText(3)
     print("Raster Catalog name is %s" % rc_name)
 
     # Get the list of rasters in the working environment
     rasters = arcpy.ListRasters()
 
-    arcpy.AddMessage("Rasters: %s" % rasters)
+    # arcpy.AddMessage("Rasters: %s" % rasters)
+    print("Rasters:")
+    pprint.pprint(rasters)
 
     for raster in rasters:
-
         arcpy.BuildPyramids_management(raster, "", skip_first, "", "", "", skip_exist)
-
-        desc = arcpy.Describe(raster)
-
-        sr = desc.spatialReference
 
     if not arcpy.Exists(file_gdb):
         arcpy.CreateFileGDB_management(outdir, gdb_name)
 
         arcpy.AddMessage("FileGDB Created")
 
+    # Arbitrarily use the spatial reference from the first raster in the list
+    sr = describe_raster(rasters[0])
+
     # Create file geodatabase managed Raster Catalog
     arcpy.CreateRasterCatalog_management(file_gdb, rc_name, sr, sr, "", "", "", "", "MANAGED", "")
 
     arcpy.AddMessage("Raster Catalog Created")
 
-    arcpy.WorkspaceToRasterCatalog_management(outdir, file_gdb + os.sep + rc_name, "", "")
+    arcpy.RasterToGeodatabase_conversion(rasters, os.path.join(file_gdb, rc_name), "")
 
     arcpy.AddMessage("Rasters Loaded")
 
-    arcpy.AddField_management(file_gdb + os.sep + rc_name, year_field, "DATE", "", "", "", "", "")
+    # Add the rasters to the raster catalog stored in the geodatabase
+    arcpy.AddField_management(os.path.join(file_gdb, rc_name), year_field, "DATE", "", "", "", "", "")
 
     arcpy.AddMessage("Year Field Added")
 
-    date_field = "Year"
-
-    cur = arcpy.UpdateCursor(file_gdb + os.sep + rc_name, "")
+    cur = arcpy.UpdateCursor(os.path.join(file_gdb, rc_name), "")
 
     # Parse through the rows of the raster catalog and populate the "Year" field with the appropriate date
     for row in cur:
@@ -109,17 +120,19 @@ def main_work(indir, gdb_name, rc_name, outdir = None,
 
             year = years[1]
 
-        row.setValue(date_field, r"7/1/%s" % year)
+        row.setValue(year_field, r"7/1/%s" % year)
 
         cur.updateRow(row)
 
     return None
 
+
 def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-i", dest="indir", type=str, required=True,
-                        help="The full path to the working environment")
+                        help="The full path to the working environment - a folder containing the annual "
+                             "rasters to animate")
 
     parser.add_argument("-o", dest="outdir", type=str, required=False,
                         help="The full path to the output directory.  The input directory is"
