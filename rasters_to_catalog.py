@@ -6,10 +6,13 @@ A command line version of the script that is used by ArcTool 'Animation Raster C
 
 import arcpy
 import os
+import sys
 import datetime as dt
 import re
 import argparse
 import pprint
+
+print sys.executable
 
 
 def get_time():
